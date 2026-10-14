@@ -27,3 +27,10 @@ The trade-off is that the content check is truncated: two files whose first mega
 That truncation is the one edge to know about. A file changed only past the first megabyte will appear unchanged after a sync and will keep its old tail in the destination. For typical text, code, and config files this never matters. For large append-only logs or media with appended metadata, call `sync()` twice if you suspect a partial change, or replace `_MAX_HASH_BYTES` in `directory_mirror_sync.core` with a larger value for your deployment.
 
 Symlinks are mirrored as symlinks (their target string is preserved), not dereferenced. Special files (FIFOs, devices, sockets) are reported in `result.errors` rather than copied.
+
+## Design notes
+
+The window stores values eagerly rather than keeping running aggregates. Running
+sums drift with floating point over long streams, and recomputing from a small
+buffer is cheap enough that the drift is not worth the speed.
+
